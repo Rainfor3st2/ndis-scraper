@@ -279,7 +279,7 @@ def run_extraction():
 
     print("CSV content generated")
 
-    return csv_content
+    return json.dumps(csv_content)
     
 
 
