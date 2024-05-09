@@ -3,6 +3,8 @@ import websocket
 import json
 import time
 import csv
+import io
+
 
 app = Bottle()
 
@@ -263,7 +265,21 @@ def run_extraction():
 
     response.content_type = 'application/json'
     print(json.dumps(all_results))
-    return json.dumps(all_results)
+
+    # Convert all_results to CSV format
+    output = io.StringIO()
+    fieldnames = ['First Name', 'Last Name', 'Email', 'Phone Number', 'Postcode']
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+    for result in all_results:
+        writer.writerow(result)
+    
+    csv_content = output.getvalue()
+    output.close()
+
+    print("CSV content generated")
+
+    return csv_content
     
 
 
