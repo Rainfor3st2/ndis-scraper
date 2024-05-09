@@ -272,5 +272,5 @@ def run_extraction():
 
 
 
-# # Setting up the server to run on localhost at port 8080
-# run(app, host='localhost', port=8080)
+# Setting up the server to run on localhost at port 8080
+run(app, host='localhost', port=8080)
