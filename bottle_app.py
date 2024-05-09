@@ -6,7 +6,6 @@ import csv
 
 app = Bottle()
 
-
 post_code = 2000
 batch_size = 2000
 max_offset = 6000
@@ -273,5 +272,5 @@ def run_extraction():
 
 
 
-# Setting up the server to run on localhost at port 8080
-run(app, host='localhost', port=8080)
+# # Setting up the server to run on localhost at port 8080
+# run(app, host='localhost', port=8080)
