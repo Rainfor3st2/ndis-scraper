@@ -263,19 +263,8 @@ def run_extraction():
 
     response.content_type = 'application/json'
     print(json.dumps(all_results))
-
-    # Convert all_results into an array with no titles
-    simplified_results = [list(result.values()) for result in all_results]
-    print("Converted all_results to simplified format without titles")
-    return json.dumps(simplified_results)
-    # return json.dumps(all_results)
     
-
-
-
-
-
-
+    return json.dumps(all_results)  # Return results in JSON format only
 
 # Setting up the server to run on localhost at port 8080
 run(app, host='0.0.0.0', port=8080)
