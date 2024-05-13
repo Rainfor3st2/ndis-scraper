@@ -264,7 +264,7 @@ def run_extraction():
     response.content_type = 'application/json'
     print(json.dumps(all_results))
     
-    return json.dumps(all_results[0])  # Return the first result in JSON format only
+    return json.dumps(all_results)  # Return the first result in JSON format only
 
 # Setting up the server to run on localhost at port 8080
 run(app, host='0.0.0.0', port=8080)
