@@ -3,25 +3,22 @@ import websocket
 import json
 import time
 import csv
+import os
 
 app = Bottle()
+
 
 post_code = 2000
 batch_size = 2000
 max_offset = 6000
 current_offset = 0
 
-@app.route('/run/<offset_number:int>/<batch_size:int>')
-def run_extraction(offset_number, batch_size):
+@app.route('/run')
+def run_extraction():
     all_results = [] 
 
-    offset = (offset_number-1)*100
 
-    print(offset,batch_size)
-
-    def run_batch(current_offset,batch_size): 
-
-        print(222,offset,batch_size)   
+    def run_batch(current_offset,batch_size):    
             
         def extract_contact_info(data):
             results = []
@@ -53,7 +50,7 @@ def run_extraction(offset_number, batch_size):
                 "params": [{
                     "qHyperCubeDef": {
                         "qInitialDataFetch": [{
-                            "qTop": offset,
+                            "qTop": current_offset,
                             "qHeight": batch_size,
                             "qWidth": 5
                         }],
@@ -257,14 +254,43 @@ def run_extraction(offset_number, batch_size):
             ws.close() 
             print("WebSocket connection closed")
 
+
     post_code = 2000
-    batch_results = run_batch(current_offset, batch_size)
-    all_results.extend(batch_results)  # Collect all batch results
+    current_offset = 0
+    batch_size = 2000 
+
+    for current_offset in range(0, 6000, batch_size):
+        batch_results = run_batch(current_offset, batch_size)
+        all_results.extend(batch_results)  # Collect all batch results
 
     response.content_type = 'application/json'
-    print(json.dumps(all_results))
+
+
+    # Load existing emails from file to filter out duplicates
+    existing_emails = set()
+    with open('emails.txt', 'r') as file:
+        for line in file:
+            existing_emails.add(line.strip().lower())
+
+    # Filter out results with existing emails
+    filtered_results = []
+    for result in all_results:
+        if result['Email'].lower() not in existing_emails:
+            filtered_results.append(result)
+
+    all_results = filtered_results
+
+    print(filtered_results)
+
     
-    return json.dumps(all_results)  # Return the first result in JSON format only
+    return json.dumps(filtered_results)
+    
+
+
+
+
+
+
 
 # Setting up the server to run on localhost at port 8080
-run(app, host='0.0.0.0', port=8080)
+run(app, host='localhost', port=8080)
