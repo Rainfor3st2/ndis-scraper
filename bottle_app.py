@@ -7,14 +7,21 @@ import csv
 app = Bottle()
 
 post_code = 2000
-batch_size = 100  # Set batch size to 100 as per the new requirement
+batch_size = 2000
+max_offset = 6000
+current_offset = 0
 
-@app.route('/run/<batch_number:int>')
-def run_extraction(batch_number):
+@app.route('/run/<offset_number:int>/<batch_size:int>')
+def run_extraction(offset_number, batch_size):
     all_results = [] 
-    current_offset = (batch_number - 1) * 100  # Calculate offset based on batch number
 
-    def run_batch(current_offset, batch_size):    
+    offset = (offset_number-1)*100
+
+    print(offset,batch_size)
+
+    def run_batch(current_offset,batch_size): 
+
+        print(222,offset,batch_size)   
             
         def extract_contact_info(data):
             results = []
@@ -34,6 +41,7 @@ def run_extraction(batch_number):
                 print(f"An error occurred while extracting data: {e}")
             return results
 
+
         def fetch_next_batch():
             global current_offset
             create_hypercube_session_object_message = json.dumps({
@@ -45,7 +53,7 @@ def run_extraction(batch_number):
                 "params": [{
                     "qHyperCubeDef": {
                         "qInitialDataFetch": [{
-                            "qTop": current_offset,
+                            "qTop": offset,
                             "qHeight": batch_size,
                             "qWidth": 5
                         }],
@@ -71,9 +79,15 @@ def run_extraction(batch_number):
             # Update the offset for the next batch
             current_offset += batch_size
 
+
+
+
+
+
         try:
             ws = websocket.create_connection("wss://qap.dss.gov.au/app/8b12168a-8fdf-4ca2-afe4-413db6420cf9?reloadUri=https%3A%2F%2Fwww.ndiscommission.gov.au%2Ffind-ndis-behaviour-support-practitioner")
             print("WebSocket connection established")
+            
             
             open_doc_message = json.dumps({
                 'delta': True,
@@ -82,9 +96,11 @@ def run_extraction(batch_number):
                 "jsonrpc": "2.0",
                 "method": "OpenDoc",
                 "params": ["8b12168a-8fdf-4ca2-afe4-413db6420cf9", "", "", "", False],
+                
             })
             
             ws.send(open_doc_message)
+            
             print("Sent OpenDoc request")
 
             get_app_layout_message = json.dumps({
@@ -112,6 +128,7 @@ def run_extraction(batch_number):
             
             ws.send(get_field_message)
             print("Sent GetField request")
+
 
             create_session_object_message = json.dumps({
                 "delta": True,
@@ -172,8 +189,8 @@ def run_extraction(batch_number):
                         "qType": "mashup",
                         "qId": "MUwmjmpNY"
                     }
-                }]
-            })
+                }]})
+
             
             time.sleep(1)
             
@@ -202,9 +219,12 @@ def run_extraction(batch_number):
             ws.send(search_message)
             print("Sent search request")
 
+
+
             fetch_next_batch()  # Fetch the first batch
 
             time.sleep(.2)
+
 
             get_layout_message = {
                 "delta": True,
@@ -237,13 +257,14 @@ def run_extraction(batch_number):
             ws.close() 
             print("WebSocket connection closed")
 
+    post_code = 2000
     batch_results = run_batch(current_offset, batch_size)
-    all_results.extend(batch_results)  # Collect batch results
+    all_results.extend(batch_results)  # Collect all batch results
 
     response.content_type = 'application/json'
     print(json.dumps(all_results))
     
-    return json.dumps(all_results)  # Return the results in JSON format
+    return json.dumps(all_results)  # Return the first result in JSON format only
 
 # Setting up the server to run on localhost at port 8080
 run(app, host='0.0.0.0', port=8080)
